@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Angular Tests 1</title>
+		<script src="./bower_components/angular/angular.js"></script>
+		
+		<style>
+			body {
+				margin:0;padding:0;
+			} 
+
+			.main {
+				margin: 100px;
+			}
+
+			.target {
+				width:200px;
+				height:100px;
+				background-color:green;
+			}
+
+			.target:hover .handle {
+			    -webkit-transition: opacity 0.25s ease-in;
+			    -moz-transition: opacity 0.25s ease-in;
+			    -o-transition: opacity 0.25s ease-in;
+                opacity: 1;
+			}
+
+			.target .handle {
+			    -webkit-transition: opacity 0.25s ease-in;
+			    -moz-transition: opacity 0.25s ease-in;
+			    -o-transition: opacity 0.25s ease-in;
+                opacity: 0;
+			}
+
+			.handle {
+				opacity: 0; 
+				position:absolute;
+				top: 50%;
+				background-color:red;
+				width:15px;
+				height:15px;
+				cursor: ew-resize;
+				margin-top: calc(15px / 2 * -1);
+				user-drag: none; 
+				-moz-user-select: none;
+				-webkit-user-drag: none;
+			}
+
+			.handle.left {
+				left: 10px;
+			}
+
+			.handle.right {
+				right: 10px;
+			}
+		</style>
+	</head>
+	<body ng-app="myApp">
+		<script>
+
+			angular.module("myApp", []);
+
+			angular.module("myApp").controller("Main", function($scope){
+				$scope.foo = "bar";
+			}).directive("stretch", function(){
+
+				return {
+					template: "<div class='handle left'></div><div class='handle right'></div>",
+					restrict: "AE",
+					link: function(scope, element, attrs) {
+
+						var elem = element[0],
+							currentWidth = elem.offsetWidth,
+							right_handle = angular.element(elem.querySelector(".right")),
+							left_handle = angular.element(elem.querySelector(".left")),
+							left_index = elem.offsetLeft,
+							parent = angular.element(element[0].parentElement),
+							minWidth = "50";
+
+						parent[0].style.position = "relative";
+
+						attrs.$set("style", "position:relative;left:" + left_index + "px");
+						right_handle.bind("mousedown", getMouseDown(setWidth_right));
+						left_handle.bind("mousedown", getMouseDown(setWidth_left));
+
+						function getMouseDown(callback) {
+							return function mouseDown(e) {
+							    var el = e.currentTarget || e.srcElement, evt = e || window.event,
+							    startX = evt.clientX + window.pageXOffset - el.offsetLeft,
+							    startY = evt.clientY + window.pageYOffset - el.offsetTop,
+							    xloc = el.offsetLeft;
+
+							    e.preventDefault();
+
+							    currentWidth = elem.offsetWidth;
+							    left_index = elem.offsetLeft;
+							    elem.style.left = left_index + "PX";
+
+							    window.addEventListener("mousemove", mouseMove, false);
+								window.addEventListener("mouseup", function () { 
+									window.removeEventListener("mousemove", mouseMove, false);
+								});
+							
+								function mouseMove(e) {
+							      	var innerX, innerY;
+							      	innerX = e.clientX + window.pageXOffset - startX;
+							      	innerY = e.clientY + window.pageYOffset - startY;
+							      	//el.style.top = innerY  + "px";
+							      	//el.style.left = innerX + "px";
+
+							      	var distance = (innerX - xloc);
+							      	if (callback(elem, distance)){
+							      		
+							      };
+						    	}
+
+							}
+						}
+
+						function setWidth_right(el, distance){
+							var newWidth = currentWidth + distance;
+							if (newWidth < minWidth) return false;
+							el.style.width = newWidth  + "px";
+							return true;
+						}
+
+						function setWidth_left(el, width, x){
+							var newWidth = currentWidth - width ,
+								newLeft = left_index + width;
+
+							if (newWidth < minWidth) return false;
+
+							el.style.width =  newWidth + "PX";
+							el.style.left = newLeft  + "PX";
+							return true;
+						}
+					}
+				};
+				
+			});
+		</script>
+
+
+		<div ng-controller="Main" class="main">
+
+			<div class="target" stretch></div>
+
+		</div>
+	</body>
+</html>
